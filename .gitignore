@@ -1,9 +1,10 @@
 # Local .terraform directories
 **/.terraform/*
 
-# .tfstate files
-*.tfstate
-*.tfstate.*
+# .tfstate files contain a point in time snapshot of the environment and would be 
+# interesting to see diffs between terraform states, audits and self-learning
+# *.tfstate
+# *.tfstate.*
 
 # Crash log files
 crash.log
