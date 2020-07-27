@@ -5,32 +5,36 @@ import json
 url = 'https://app.deepsecurity.trendmicro.com/api/agentdeploymentscripts'
 headerData = {
     'api-version': 'v1',
-    'api-secret-key': '0953E2DB-3281-8CBF-F530-77BE500BF5B5:1A288641-9A46-743A-AB5C-177627B23BEE:Bb6Znk4thtItsfwF2ARs0LCZ5PNIvtwfEQ+xJxMfEXg=',
+    'api-secret-key': '0C0F6851-AB41-04C6-D6A8-5479A257E932:D39434A2-A97D-D987-4A25-5E8C3AEDD018:ooFt+QFJHJqHbF164EPMJMgt7B27ztGPWwhFJt5sGqc=',
     'Content-Type': 'application/json'
 }
 linuxRawData = {
     "platform": "linux",
-    "validateCertificateRequired": "true",
-    "validateDigitalSignatureRequired": "true",
-    "activationRequired": "true"
+    "validateCertificateRequired": "false",
+    "validateDigitalSignatureRequired": "false",
+    "activationRequired": "true",
+    "policyID": 3
 }
 windowsRawData = {
     "platform": "windows",
-    "validateCertificateRequired": "true",
-    "validateDigitalSignatureRequired": "true",
-    "activationRequired": "true"
+    "validateCertificateRequired": "false",
+    "validateDigitalSignatureRequired": "false",
+    "activationRequired": "true",
+    "policyID": 3
 }
 solarisRawData = {
     "platform": "solaris",
-    "validateCertificateRequired": "true",
-    "validateDigitalSignatureRequired": "true",
-    "activationRequired": "true"
+    "validateCertificateRequired": "false",
+    "validateDigitalSignatureRequired": "false",
+    "activationRequired": "true",
+    "policyID": 3
 }
 aixRawData = {
     "platform": "aix",
-    "validateCertificateRequired": "true",
-    "validateDigitalSignatureRequired": "true",
-    "activationRequired": "true"
+    "validateCertificateRequired": "false",
+    "validateDigitalSignatureRequired": "false",
+    "activationRequired": "true",
+    "policyID": 3
 }
 
 # print(type(headerData))

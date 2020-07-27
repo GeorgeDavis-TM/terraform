@@ -7,9 +7,9 @@ PATH=$PATH:/opt/csw/bin
 SOURCEURL='https://app.deepsecurity.trendmicro.com:443/';
 AGENTSEGMENT='software/agent/';
 CURL='curl ';
-CURL_OPTIONS=' --silent --tlsv1.2 -o ';
+CURL_OPTIONS=' --insecure --silent --tlsv1.2 -o ';
 CURL_HEADER='-H "Agent-Version-Control: on" ';
-CURL_QUERYSTRING='?tenantID=30958';
+CURL_QUERYSTRING='?tenantID=81444';
 CURL_MAJOR_MIN=7;
 CURL_MINOR_MIN=34;
 P5P_FILENAME='agent.p5p.gz';
@@ -92,11 +92,6 @@ if type curl > /dev/null 2>&1; then
         echo "Downloading agent package ...";
         echo "$downloadAction";
         eval ${downloadAction};
-        CURLEXIT=$?;
-        if [[ $CURLEXIT -eq 60 ]]; then
-            log "TLS certificate validation for the agent package download has failed. Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority. For more information, search for \"deployment scripts\" in the Deep Security Help Center."
-            exit 2;
-        fi
         echo "Installing agent package ...";
 
         rc=1;
@@ -126,8 +121,8 @@ if type curl > /dev/null 2>&1; then
 
             sleep 15
             /opt/ds_agent/dsa_control -r
-            /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:0953E2DB-3281-8CBF-F530-77BE500BF5B5" "token:7FD27CAC-B26B-A4C6-49B1-70B3FD13477D"
-            # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0953E2DB-3281-8CBF-F530-77BE500BF5B5" "token:7FD27CAC-B26B-A4C6-49B1-70B3FD13477D"
+            /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
+            # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
         else
             log "Failed to install the agent package.";
             false;

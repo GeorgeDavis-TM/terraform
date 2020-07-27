@@ -1,26 +1,13 @@
-locals {
-  scriptName = join(
-    "",
-    [
-      "dsa_deploy_",
-      data.aws_ami.ubuntu-1804.platform == "windows" ? "windows" : "linux",
-      data.aws_ami.ubuntu-1804.platform == "windows" ? ".ps1" : ".sh"
-    ]
-  )
-  sourcePath      = join("", ["shell-scripts/", local.scriptName])
-  destinationPath = join("", ["/tmp/", local.scriptName])
-}
-
 resource "aws_instance" "georged-tf-test" {
   ami                    = data.aws_ami.ubuntu-1804.image_id
   instance_type          = "t2.medium"
   vpc_security_group_ids = [aws_security_group.georged-ssh-sg.id]
-  key_name               = var.keyName
+  key_name               = var.defaultAwsKeyName
+  iam_instance_profile   = var.defaultAwsIamInstanceProfileName
 
   root_block_device {
-    volume_type = var.volumeType
-    volume_size = var.volumeSize
-    encrypted   = true
+    volume_type = var.defaultAwsVolumeType
+    volume_size = var.defaultAwsVolumeSize
   }
 
   tags = {
@@ -33,14 +20,14 @@ resource "aws_instance" "georged-tf-test" {
   # on the local linux box you are executing terraform
   # from.  The destination is on the new AWS instance.
   provisioner "file" {
-    source      = local.sourcePath
-    destination = local.destinationPath
+    source      = local.dsaSourcePath
+    destination = local.dsaDestinationPath
   }
   # Change permissions on bash script and execute from ec2-user.
   provisioner "remote-exec" {
     inline = [
-      "chmod +x ${local.destinationPath}",
-      "sudo ${local.destinationPath}",
+      "chmod +x ${local.dsaDestinationPath}",
+      "sudo ${local.dsaDestinationPath}",
     ]
   }
 
@@ -49,14 +36,14 @@ resource "aws_instance" "georged-tf-test" {
     type        = "ssh"
     user        = "ubuntu"
     password    = ""
-    private_key = file(var.keyPath)
+    private_key = file(var.defaultAwsKeyFilePath)
     host        = self.public_ip
   }
 }
 
 resource "aws_ebs_volume" "georged-tf-test-vol" {
-  size              = var.volumeSize
-  availability_zone = var.availabilityZone
+  size              = var.defaultAwsVolumeSize
+  availability_zone = var.defaultAwsAvailabilityZone
   encrypted         = true
 
   tags = {

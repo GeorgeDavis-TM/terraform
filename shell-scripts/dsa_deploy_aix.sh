@@ -4,7 +4,7 @@ ACTIVATIONURL='dsm://agents.deepsecurity.trendmicro.com:443/'
 SOURCEURL='https://app.deepsecurity.trendmicro.com:443/';
 AGENTSEGMENT='software/agent/';
 CURL='curl ';
-CURL_OPTIONS=' --silent --tlsv1.2 -o ';
+CURL_OPTIONS=' --insecure --silent --tlsv1.2 -o ';
 CURL_MAJOR_MIN=7;
 CURL_MINOR_MIN=34;
 FILENAME='agent.bff.gz';
@@ -13,7 +13,7 @@ platform='AIX';
 version=`uname -v`;
 release=`uname -r`;
 CURL_HEADER='-H "Agent-Version-Control: on" ';
-CURL_QUERYSTRING="?tenantID=30958&aixVersion=${version}&aixRelease=${release}";
+CURL_QUERYSTRING="?tenantID=81444&aixVersion=${version}&aixRelease=${release}";
 if [ ${version} -eq "7" ] && [ ${release} -eq "2" ]; then
     # Special case for AIX 7.2 for DS9.0 agent. AIX7.1 and AIX7.2 both use the same AIX7.1 package
     release=1;
@@ -45,11 +45,6 @@ if type curl > /dev/null 2>&1; then
             rm -rf "${PACKAGE}";
             echo "$downloadAction";
             eval ${downloadAction};
-            CURLEXIT=$?;
-            if [[ $CURLEXIT -eq 60 ]] || [[ $CURLEXIT -eq 35 ]]; then
-                log "TLS certificate validation for the agent package download has failed. Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority. For more information, search for \"deployment scripts\" in the Deep Security Help Center."
-                exit 2;
-            fi
             file $PACKAGE | grep "gzip";
         if [ $? -ne 0 ]; then
             # Download with the new package name failed. Try with the old package name;
@@ -58,11 +53,6 @@ if type curl > /dev/null 2>&1; then
             rm -rf "${PACKAGE}";
             echo "$downloadAction";
             eval ${downloadAction};
-            CURLEXIT=$?;
-            if [[ $CURLEXIT -eq 60 ]] || [[ $CURLEXIT -eq 35 ]]; then
-                log "TLS certificate validation for the agent package download has failed. Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority. For more information, search for \"deployment scripts\" in the Deep Security Help Center."
-                exit 2;
-            fi
             file $PACKAGE | grep "gzip";
             if [ $? -ne 0 ]; then
                 log "Failed to download agent package";
@@ -81,8 +71,8 @@ if type curl > /dev/null 2>&1; then
 
             sleep 15
             /opt/ds_agent/dsa_control -r
-            /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:0953E2DB-3281-8CBF-F530-77BE500BF5B5" "token:7FD27CAC-B26B-A4C6-49B1-70B3FD13477D"
-            # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0953E2DB-3281-8CBF-F530-77BE500BF5B5" "token:7FD27CAC-B26B-A4C6-49B1-70B3FD13477D"
+            /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
+            # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
         else
             log "Failed to install the agent package.";
             false;

@@ -28,20 +28,13 @@ $WebClient = New-Object System.Net.WebClient
 
 # Add agent version control info
 $WebClient.Headers.Add("Agent-Version-Control", "on")
-$WebClient.QueryString.Add("tenantID", "30958")
+$WebClient.QueryString.Add("tenantID", "81444")
 $WebClient.QueryString.Add("windowsVersion", (Get-CimInstance Win32_OperatingSystem).Version)
 $WebClient.QueryString.Add("windowsProductType", (Get-CimInstance Win32_OperatingSystem).ProductType)
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-
-Try
-{
-     $WebClient.DownloadFile($sourceUrl,  "$env:temp\agent.msi")
-} Catch [System.Net.WebException]
-{
-      echo " Please check that your Deep Security Manager TLS certificate is signed by a trusted root certificate authority."
-      exit 2;
-}
+[Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+$WebClient.DownloadFile($sourceUrl,  "$env:temp\agent.msi")
 
 if ( (Get-Item "$env:temp\agent.msi").length -eq 0 ) {
     echo "Failed to download the Deep Security Agent. Please check if the package is imported into the Deep Security Manager. "
@@ -49,19 +42,14 @@ if ( (Get-Item "$env:temp\agent.msi").length -eq 0 ) {
 }
 echo "$(Get-Date -format T) - Downloaded File Size:" (Get-Item "$env:temp\agent.msi").length
 
-if ( (Get-AuthenticodeSignature "$env:temp\agent.msi").Status -ne "Valid" ) {
-    echo "The digital signature of Deep Security Agent is invalid."
-    exit 1
-}
-
 echo "$(Get-Date -format T) - DSA install started"
 echo "$(Get-Date -format T) - Installer Exit Code:" (Start-Process -FilePath msiexec -ArgumentList "/i $env:temp\agent.msi /qn ADDLOCAL=ALL /l*v `"$env:LogPath\dsa_install.log`"" -Wait -PassThru).ExitCode 
 echo "$(Get-Date -format T) - DSA activation started"
 
 Start-Sleep -s 50
 & $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -r
-& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a $ACTIVATIONURL "tenantID:0953E2DB-3281-8CBF-F530-77BE500BF5B5" "token:7FD27CAC-B26B-A4C6-49B1-70B3FD13477D"
-#& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0953E2DB-3281-8CBF-F530-77BE500BF5B5" "token:7FD27CAC-B26B-A4C6-49B1-70B3FD13477D"
+& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a $ACTIVATIONURL "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
+#& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
 Stop-Transcript
 echo "$(Get-Date -format T) - DSA Deployment Finished"
 </powershell>

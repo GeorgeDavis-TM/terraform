@@ -1,30 +1,78 @@
-variable "region" {
-  default = "us-east-2"
+variable "defaultAwsRegion" {
+  default     = "us-east-2"
+  description = "Default AWS Region"
 }
-variable "availabilityZone" {
-  default = "us-east-2a"
+
+variable "defaultAwsAvailabilityZone" {
+  default     = "us-east-2a"
+  description = "Default AWS Availability Zone"
 }
-variable "instanceType" {
-  default = "t2.micro"
+
+variable "defaultAwsInstanceType" {
+  default     = "t2.micro"
+  description = "Default AWS Instance Type"
 }
-variable "keyName" {
-  default = "CloudOne"
+
+variable "defaultAwsKeyName" {
+  default     = "CloudOne"
+  description = "Default AWS Key Name"
 }
-variable "keyPath" {
-  default = "~/Downloads/CloudOne.pem"
+
+variable "defaultAwsKeyFilePath" {
+  default     = "~/Downloads/CloudOne.pem"
+  description = "Default AWS Key File Path"
 }
-variable "volumeType" {
-  default = "gp2"
+
+variable "defaultAwsIamInstanceProfileName" {
+  default     = "Cloud1"
+  description = "Default AWS IAM Instance Profile Name"
 }
-variable "volumeSize" {
-  default = 40
+
+variable "defaultAwsVolumeType" {
+  default     = "gp2"
+  description = "Default AWS Volume Type"
 }
+
+variable "defaultAwsVolumeSize" {
+  default     = 40
+  description = "Default AWS Volume Size"
+}
+
 variable "tagOwner" {
-  default = "george_davis@trendmicro.com"
+  default     = "george_davis@trendmicro.com"
+  description = "Default AWS Resource Tag:Owner Value"
 }
+
 variable "localIpCidr" {
-  default = "142.116.0.0/15"
+  default     = "142.116.0.0/15"
+  description = "Default AWS Local IP CIDR"
 }
+
+variable "defaultAwsSubnetId" {
+  default     = "subnet-c1dc41a8"
+  description = "Default AWS Subnet ID"
+}
+
+variable "defaultAzureRegion" {
+  default     = "Canada Central"
+  description = "Default Azure Region"
+}
+
+variable "defaultAzureResourceGroupName" {
+  default     = "cloudone"
+  description = "Default Azure Resource Group Name"
+}
+
+variable "defaultAzureVirtualNetwork" {
+  default     = "cloudone-vnet"
+  description = "Default Azure Virtual Network Name"
+}
+
+variable "defaultAzureSubnetId" {
+  default     = "/subscriptions/18cb46c3-ea58-41c2-8cc6-71d8662f1203/resourceGroups/cloudone/providers/Microsoft.Network/virtualNetworks/cloudone-vnet/subnets/default"
+  description = "Default Azure Subnet Name"
+}
+
 # variable "subnet" {
 #    default = "subnet-<PUT IN YOUR VPC SUBNET>"
 # }
