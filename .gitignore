@@ -28,3 +28,9 @@ override.tf.json
 
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
+
+# Custom exceptions
+modules/cloud-governance-workshop/*.sql
+
+# Apple MacBook macOS exceptions
+.DS_Store

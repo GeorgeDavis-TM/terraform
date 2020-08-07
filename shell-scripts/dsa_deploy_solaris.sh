@@ -121,8 +121,8 @@ if type curl > /dev/null 2>&1; then
 
             sleep 15
             /opt/ds_agent/dsa_control -r
-            /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
-            # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
+            /opt/ds_agent/dsa_control -a $ACTIVATIONURL "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:265"
+            # /opt/ds_agent/dsa_control -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:265"
         else
             log "Failed to install the agent package.";
             false;

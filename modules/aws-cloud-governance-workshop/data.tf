@@ -18,7 +18,7 @@ data "aws_ami" "ubuntu-1804" {
   }
 }
 
-data "aws_iam_policy_document" "cgw-iam-policy-doc" {
+data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
   statement {
     actions = [
       "s3:*"
@@ -28,9 +28,9 @@ data "aws_iam_policy_document" "cgw-iam-policy-doc" {
     ]
     condition {
       test     = "StringEquals"
-      variable = "aws:ResourceTag/Project"
+      variable = "aws:ResourceTag/Team-UUID"
       values = [
-        join("", ["cgw-", random_string.unique-id.result])
+        join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
   }
@@ -44,9 +44,9 @@ data "aws_iam_policy_document" "cgw-iam-policy-doc" {
     ]
     condition {
       test     = "StringEquals"
-      variable = "ec2:ResourceTag/Project"
+      variable = "ec2:ResourceTag/Team-UUID"
       values = [
-        join("", ["cgw-", random_string.unique-id.result])
+        join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
   }
@@ -60,9 +60,9 @@ data "aws_iam_policy_document" "cgw-iam-policy-doc" {
     ]
     condition {
       test     = "StringEquals"
-      variable = "aws:ResourceTag/Project"
+      variable = "aws:ResourceTag/Team-UUID"
       values = [
-        join("", ["cgw-", random_string.unique-id.result])
+        join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
   }
@@ -76,9 +76,9 @@ data "aws_iam_policy_document" "cgw-iam-policy-doc" {
     ]
     condition {
       test     = "StringEquals"
-      variable = "iam:ResourceTag/Project"
+      variable = "iam:ResourceTag/Team-UUID"
       values = [
-        join("", ["cgw-", random_string.unique-id.result])
+        join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
   }

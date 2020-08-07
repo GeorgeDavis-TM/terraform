@@ -48,8 +48,8 @@ echo "$(Get-Date -format T) - DSA activation started"
 
 Start-Sleep -s 50
 & $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -r
-& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a $ACTIVATIONURL "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
-#& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:3"
+& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a $ACTIVATIONURL "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:265"
+#& $Env:ProgramFiles"\Trend Micro\Deep Security Agent\dsa_control" -a dsm://agents.deepsecurity.trendmicro.com:443/ "tenantID:0C0F6851-AB41-04C6-D6A8-5479A257E932" "token:09C86B32-AED2-35D9-8807-A4C47BFA6257" "policyid:265"
 Stop-Transcript
 echo "$(Get-Date -format T) - DSA Deployment Finished"
 </powershell>

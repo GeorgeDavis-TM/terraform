@@ -1,4 +1,4 @@
-# Cloud Governance Workshop Module
+# Cloud Governance Workshop AWS Module
 
 ## Module Description
 
@@ -16,6 +16,8 @@ This module creates AWS resources in the following AWS services for the Cloud Go
 - Amazon IAM Policy
 - Amazon VPC Security Group
 - Amazon KMS
+- Amazon Lambda (WIP)
+- Amazon RDS (WIP)
 
 
 ## Module Output

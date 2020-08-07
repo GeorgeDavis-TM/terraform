@@ -7,14 +7,14 @@ resource "aws_security_group" "georged-nodejs-sg" {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
-    cidr_blocks = ["142.116.27.242/32"]
+    cidr_blocks = [var.localIpCidr]
   }
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["142.116.27.242/32"]
+    cidr_blocks = [var.localIpCidr]
   }
 
   egress {
@@ -76,6 +76,31 @@ resource "aws_security_group" "georged-ssh-sg" {
 
   tags = {
     Name  = "georged-ssh-sg"
+    Owner = var.tagOwner
+  }
+}
+
+resource "aws_security_group" "georged-https-sg" {
+  name        = "georged-https-sg"
+  description = "Allow HTTPS traffic"
+  # vpc_id      = "${aws_vpc.main.id }"
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name  = "georged-https-sg"
     Owner = var.tagOwner
   }
 }

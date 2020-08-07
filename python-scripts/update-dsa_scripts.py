@@ -13,28 +13,28 @@ linuxRawData = {
     "validateCertificateRequired": "false",
     "validateDigitalSignatureRequired": "false",
     "activationRequired": "true",
-    "policyID": 3
+    "policyID": 265
 }
 windowsRawData = {
     "platform": "windows",
     "validateCertificateRequired": "false",
     "validateDigitalSignatureRequired": "false",
     "activationRequired": "true",
-    "policyID": 3
+    "policyID": 265
 }
 solarisRawData = {
     "platform": "solaris",
     "validateCertificateRequired": "false",
     "validateDigitalSignatureRequired": "false",
     "activationRequired": "true",
-    "policyID": 3
+    "policyID": 265
 }
 aixRawData = {
     "platform": "aix",
     "validateCertificateRequired": "false",
     "validateDigitalSignatureRequired": "false",
     "activationRequired": "true",
-    "policyID": 3
+    "policyID": 265
 }
 
 # print(type(headerData))

@@ -23,6 +23,11 @@ resource "azurerm_network_interface" "georged-tf-test-nic" {
   }
 }
 
+resource "azurerm_network_interface_security_group_association" "georged-tf-test-nic" {
+  network_interface_id      = azurerm_network_interface.georged-tf-test-nic.id
+  network_security_group_id = azurerm_network_security_group.georged-ssh-sg.id
+}
+
 resource "azurerm_public_ip" "george-tf-test-public-ip" {
   name                = "george-tf-test-public-ip"
   resource_group_name = var.defaultAzureResourceGroupName
