@@ -7,11 +7,11 @@ resource "random_string" "unique-id" {
 
 resource "aws_instance" "cgw-aws-instance" {
   availability_zone      = var.defaultAwsAvailabilityZone
-  ami                    = data.aws_ami.ubuntu-1804.image_id
+  ami                    = data.aws_ami.amzn-linux-2.image_id
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.cgw-aws-ssh-sg.id]
-  key_name               = var.defaultAwsKeyName
-  # iam_instance_profile   = aws_iam_instance_profile.cgw-aws-iam-instance-profile.name
+  vpc_security_group_ids = [aws_security_group.cgw-aws-ssh-sg.id] # TODO: Enable Code Server - aws_security_group.cgw-aws-codeserver-sg.id
+  key_name               = var.defaultAwsKeyPairName
+  iam_instance_profile   = aws_iam_instance_profile.cgw-aws-iam-instance-profile.name
 
   root_block_device {
     volume_type = var.defaultAwsVolumeType
@@ -19,36 +19,111 @@ resource "aws_instance" "cgw-aws-instance" {
   }
 
   tags = {
-    Name      = join("", ["cgw-aws-ec2-instance-", random_string.unique-id.result])
+    Name      = join("", ["cgw-aws-ec2-", random_string.unique-id.result])
     Owner     = var.tagOwner
     Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
     Project   = "cgw"
     Team      = var.teamTag
   }
 
-  # Copy in the bash script we want to execute.
-  # The source is the location of the bash script
-  # on the local linux box you are executing terraform
-  # from.  The destination is on the new AWS instance.
   provisioner "file" {
     source      = local.dsaSourcePath
     destination = local.dsaDestinationPath
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
   }
-  # Change permissions on bash script and execute from ec2-user.
+
+  provisioner "file" {
+    source      = "${path.module}/code-server_deploy"
+    destination = "~/code-server_deploy"
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
+  }
+
   provisioner "remote-exec" {
     inline = [
       "chmod +x ${local.dsaDestinationPath}",
       "sudo ${local.dsaDestinationPath}",
+      "sudo mkdir -p ~/.config/code-server",
+      "sudo touch ~/.config/code-server/config.yaml",
+      "sudo chown -R ec2-user:ec2-user ~/.config/code-server",
+      "sudo mkdir -p ~/vscode/user-data/User",
+      "sudo touch ~/vscode/user-data/User/settings.json",
+      "sudo chown -R ec2-user:ec2-user ~/vscode"
     ]
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
   }
 
-  # Login to the ec2-user with the aws key.
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    password    = ""
-    private_key = file(var.defaultAwsKeyFilePath)
-    host        = self.public_ip
+  provisioner "file" {
+    source      = "${path.module}/code-server_deploy/code-server_conformity-extension-settings.json"
+    destination = "~/vscode/user-data/User/settings.json"
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "curl -fsSL https://code-server.dev/install.sh | sh",
+      "sudo chown -R ec2-user:ec2-user ~/.local"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/code-server_deploy/code-server_config-template.tpl", {
+      cgw-aws-uuid = random_string.unique-id.result
+    })
+    destination = "~/.config/code-server/config.yaml"
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "~/.local/bin/code-server --install-extension ~/code-server_deploy/raphaelbottino.cc-template-scanner-0.4.0.vsix",
+      "rm -f ~/code-server_deploy/*.tpl",
+      "rm -f ~/code-server_deploy/README.md", # TODO: CF Question - Comment to leave clue for Phase 2 with Conformity
+      "~/.local/bin/code-server &"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
   }
 }
 
@@ -72,18 +147,18 @@ resource "aws_volume_attachment" "cgw-aws-vol-attach" {
   instance_id = aws_instance.cgw-aws-instance.id
 }
 
-# resource "aws_eip" "cgw-aws-instance-public-ip" {
-#   vpc      = true
-#   instance = aws_instance.cgw-aws-instance.id
+# # resource "aws_eip" "cgw-aws-instance-public-ip" {
+# #   vpc      = true
+# #   instance = aws_instance.cgw-aws-instance.id
 
-#   tags = {
-#     Name    = join("", ["cgw-aws-instance-public-ip-", random_string.unique-id.result])
-#     Owner   = var.tagOwner
-#     Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
-#     Project = "cgw"
-#     Team    = var.teamTag
-#   }
-# }
+# #   tags = {
+# #     Name    = join("", ["cgw-aws-instance-public-ip-", random_string.unique-id.result])
+# #     Owner   = var.tagOwner
+# #     Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
+# #     Project = "cgw"
+# #     Team    = var.teamTag
+# #   }
+# # }
 
 resource "aws_s3_bucket" "cgw-aws-s3-bucket" {
   bucket = join("", ["cgw-aws-s3-bucket-", random_string.unique-id.result])
@@ -229,6 +304,34 @@ resource "aws_security_group" "cgw-aws-https-sg" {
   }
 }
 
+resource "aws_security_group" "cgw-aws-codeserver-sg" {
+  name        = join("", ["cgw-aws-codeserver-sg-", random_string.unique-id.result])
+  description = "Allow Code Server traffic"
+  # vpc_id      = "${aws_vpc.main.id }"
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name      = join("", ["cgw-aws-codeserver-sg-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
 resource "aws_kms_key" "cgw-aws-kms-key" {
   description         = join("", ["cgw-aws-kms-key-", random_string.unique-id.result, " for ", aws_iam_user.cgw-aws-iam-user.name])
   is_enabled          = true
@@ -259,6 +362,27 @@ resource "aws_lb" "cgw-aws-elb" {
   }
 }
 
+resource "aws_cloudformation_stack" "cgw-aws-sns" {
+  name = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+  template_body = templatefile("${path.module}/email-sns-stack.json-template.tpl", {
+    display_name  = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+    subscriptions = join(",", formatlist("{ \"Endpoint\": \"%s\", \"Protocol\": \"email\"  }", var.teamMembers))
+  })
+
+  tags = {
+    Name      = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
+resource "aws_sns_topic_policy" "cgw-aws-sns-policy" {
+  arn    = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+  policy = data.aws_iam_policy_document.cgw-aws-sns-policy-doc.json
+}
+
 resource "local_file" "mysql-script" {
   content = templatefile("${path.module}/db-insert-aws-template.tpl", {
     cgw-aws-uuid                 = random_string.unique-id.result
@@ -279,13 +403,6 @@ resource "local_file" "mysql-script" {
 }
 
 resource "null_resource" "mysql-run" {
-  connection {
-    type     = "ssh"
-    user     = local.ubuntuUser
-    password = local.ubuntuPass
-    host     = local.mysqlHostIP
-  }
-
   provisioner "file" {
     # source      = "./${path.module}/mysql-script-${random_string.unique-id.result}.sql"
     content = templatefile("${path.module}/db-insert-aws-template.tpl", {
@@ -312,4 +429,27 @@ resource "null_resource" "mysql-run" {
       "rm -rf /tmp/mysql-script.sql"
     ]
   }
+
+  connection {
+    type        = "ssh"
+    user        = local.vmUser
+    private_key = file(var.dbAwsKeyPairFilePath)
+    host        = local.mysqlHostIP
+  }
 }
+
+resource "local_file" "cgw-conformity-api-aws-script" {
+  content = templatefile("${path.module}/aws-conformity-api-cmd-template.tpl", {
+    cgw-aws-uuid               = random_string.unique-id.result
+    cgw-aws-cf-stack-arn       = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+    cgw-aws-conformity-acct-id = local.conformityAwsAccountId
+  })
+  filename = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
+}
+
+# resource "null_resource" "cgw-conformity-api-aws-script-run" {
+#   provisioner "local-exec" {
+#     command     = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
+#     interpreter = ["/bin/bash"]
+#   }
+# }

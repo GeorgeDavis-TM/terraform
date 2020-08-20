@@ -2,7 +2,7 @@ resource "aws_instance" "georged-k8s-host" {
   ami                    = data.aws_ami.ubuntu-1804.image_id
   instance_type          = "t2.medium"
   vpc_security_group_ids = [aws_security_group.georged-ssh-sg.id, aws_security_group.georged-k8s-sg.id]
-  key_name               = var.defaultAwsKeyName
+  key_name               = var.defaultAwsKeyPairName
   iam_instance_profile   = var.defaultAwsIamInstanceProfileName
 
   tags = {

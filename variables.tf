@@ -13,12 +13,12 @@ variable "defaultAwsInstanceType" {
   description = "Default AWS Instance Type"
 }
 
-variable "defaultAwsKeyName" {
+variable "defaultAwsKeyPairName" {
   default     = "CloudOne"
   description = "Default AWS Key Name"
 }
 
-variable "defaultAwsKeyFilePath" {
+variable "defaultAwsKeyPairFilePath" {
   default     = "~/Downloads/CloudOne.pem"
   description = "Default AWS Key File Path"
 }

@@ -17,7 +17,9 @@ This module creates AWS resources in the following AWS services for the Cloud Go
 - Amazon VPC Security Group
 - Amazon KMS
 - Amazon Lambda (WIP)
-- Amazon RDS (WIP)
+- ~~Amazon RDS~~
+- Amazon SNS
+- Amazon CloudFormation
 
 
 ## Module Output

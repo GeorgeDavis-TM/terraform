@@ -31,6 +31,7 @@ output "cgw-aws-iam-user" {
 
 output "cgw-aws-iam-user-password" {
   description = "AWS Console password of the IAM User"
+  sensitive   = true
   value       = aws_iam_user_login_profile.cgw-aws-iam-user-login-profile.encrypted_password
 }
 
@@ -52,4 +53,9 @@ output "cgw-aws-iam-policy" {
 output "cgw-aws-ssh-sg" {
   description = "Name of the VPC Security Group"
   value       = aws_security_group.cgw-aws-ssh-sg.name
+}
+
+output "cgw-aws-cf-stack-arn" {
+  description = "ARN of the Email SNS topic"
+  value       = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
 }

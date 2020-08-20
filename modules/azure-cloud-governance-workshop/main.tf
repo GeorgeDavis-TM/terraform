@@ -277,6 +277,27 @@ resource "azurerm_key_vault_secret" "cgw-az-kv-secret" {
   }
 }
 
+resource "aws_cloudformation_stack" "cgw-aws-sns" {
+  name = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+  template_body = templatefile("${path.module}/email-sns-stack.json-template.tpl", {
+    display_name  = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+    subscriptions = join(",", formatlist("{ \"Endpoint\": \"%s\", \"Protocol\": \"email\"  }", var.teamMembers))
+  })
+
+  tags = {
+    Name      = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-az-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
+resource "aws_sns_topic_policy" "cgw-aws-sns-policy" {
+  arn    = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+  policy = data.aws_iam_policy_document.cgw-aws-sns-policy-doc.json
+}
+
 resource "local_file" "mysql-script" {
   content = templatefile("${path.module}/db-insert-az-template.tpl", {
     cgw-az-uuid      = random_string.unique-id.result
@@ -297,8 +318,8 @@ resource "local_file" "mysql-script" {
 resource "null_resource" "mysql-run" {
   connection {
     type     = "ssh"
-    user     = local.ubuntuUser
-    password = local.ubuntuPass
+    user     = local.vmUser
+    password = local.vmPass
     host     = local.mysqlHostIP
   }
 
@@ -325,5 +346,20 @@ resource "null_resource" "mysql-run" {
       "mysql -u ${local.mysqlDbRootUser} -p${local.mysqlDbRootPass} < /tmp/mysql-script.sql",
       "rm -rf /tmp/mysql-script.sql"
     ]
+  }
+}
+
+resource "null_resource" "cgw-conformity-api-az-script-run" {
+  provisioner "file" {
+    content = templatefile("${path.module}/az-conformity-api-cmd-template.tpl", {
+      cgw-az-uuid               = random_string.unique-id.result
+      cgw-aws-cf-stack-arn      = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+      cgw-az-conformity-acct-id = local.conformityAzAccountId
+    })
+    destination = "${path.module}/conformity-api-cmd-${random_string.unique-id.result}.sh"
+  }
+
+  provisioner "local-exec" {
+    command = "./${path.module}/conformity-api-cmd-${random_string.unique-id.result}.sh"
   }
 }

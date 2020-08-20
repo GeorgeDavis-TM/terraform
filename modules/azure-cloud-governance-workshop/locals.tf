@@ -3,9 +3,11 @@ locals {
   dsaSourcePath      = join("", ["./shell-scripts/", local.dsaScriptName])
   dsaDestinationPath = join("", ["/tmp/", local.dsaScriptName])
 
-  ubuntuUser      = "user"
-  ubuntuPass      = "user"
+  vmUser          = "ec2-user"
+  vmPass          = "ec2-user"
   mysqlDbRootUser = "root"
-  mysqlDbRootPass = "root"
-  mysqlHostIP     = "192.168.2.37"
+  mysqlDbRootPass = "Windows1!Windows1!"
+  mysqlHostIP     = "3.20.89.105"
+
+  conformityAzAccountId = "6RSBdHc7r"
 }

@@ -1,23 +1,44 @@
-variable "teamTag" {} # Input parameter from the root module invocation
+variable "teamTag" {
+  type = string
+} # Input parameter from the root module invocation
+
+variable "teamMembers" {
+  type = list(string)
+} # Input parameter from the root module invocation
 
 variable "defaultAwsRegion" {
-  default     = "us-east-2"
+  default     = "us-east-1"
   description = "Default AWS Region"
 }
 
+variable "defaultAwsVpcId" {
+  default     = "vpc-96c5c8f0"
+  description = "Default AWS VPC ID"
+}
+
 variable "defaultAwsAvailabilityZone" {
-  default     = "us-east-2a"
+  default     = "us-east-1a"
   description = "Default AWS Availability Zone"
 }
 
-variable "defaultAwsKeyName" {
-  default     = "CloudOne"
-  description = "Default AWS Key Name"
+variable "defaultAwsSubnetId" {
+  default     = "subnet-aaf41586"
+  description = "Default AWS Subnet ID"
 }
 
-variable "defaultAwsKeyFilePath" {
+variable "defaultAwsKeyPairName" {
+  default     = "CGW-Keypair"
+  description = "Default AWS Key Pair Name"
+}
+
+variable "defaultAwsKeyPairFilePath" {
+  default     = "~/Downloads/CGW-Keypair.pem"
+  description = "Default AWS Key Pair File Path"
+}
+
+variable "dbAwsKeyPairFilePath" {
   default     = "~/Downloads/CloudOne.pem"
-  description = "Default AWS Key File Path"
+  description = "DB AWS Key Pair File Path"
 }
 
 variable "defaultAwsVolumeType" {
@@ -33,11 +54,6 @@ variable "defaultAwsVolumeSize" {
 variable "tagOwner" {
   default     = "george_davis@trendmicro.com"
   description = "Default AWS Resource Tag:Owner Value"
-}
-
-variable "defaultAwsSubnetId" {
-  default     = "subnet-c1dc41a8"
-  description = "Default AWS Subnet ID"
 }
 
 variable "defaultAwsIamUserName" {

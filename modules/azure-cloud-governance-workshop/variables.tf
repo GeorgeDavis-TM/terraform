@@ -29,3 +29,8 @@ variable "defaultAzVolumeSize" {
   default     = 40
   description = "Default Azure Root Volume Size"
 }
+
+variable "dbAwsKeyPairFilePath" {
+  default     = "~/Downloads/CloudOne.pem"
+  description = "DB AWS Key Pair File Path"
+}

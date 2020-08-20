@@ -18,8 +18,29 @@ data "aws_ami" "ubuntu-1804" {
   }
 }
 
+data "aws_ami" "amzn-linux-2" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
   statement {
+    sid = join("", ["CGWS3Role", random_string.unique-id.result])
     actions = [
       "s3:*"
     ]
@@ -36,6 +57,7 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
   }
 
   statement {
+    sid = join("", ["CGWEc2Role", random_string.unique-id.result])
     actions = [
       "ec2:*"
     ]
@@ -52,6 +74,7 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
   }
 
   statement {
+    sid = join("", ["CGWKmsRole", random_string.unique-id.result])
     actions = [
       "kms:*"
     ]
@@ -68,6 +91,7 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
   }
 
   statement {
+    sid = join("", ["CGWIamRole", random_string.unique-id.result])
     actions = [
       "iam:*"
     ]
@@ -83,3 +107,45 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
     }
   }
 }
+
+data "aws_iam_policy_document" "cgw-aws-sns-policy-doc" {
+  statement {
+    sid = join("", ["CGWConformityCrossAccountRole", random_string.unique-id.result])
+    actions = [
+      "SNS:Publish"
+    ]
+    resources = [
+      "${aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]}"
+    ]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::717210094962:root"]
+    }
+  }
+
+  statement {
+    sid = join("", ["CGWSnsRole", random_string.unique-id.result])
+    actions = [
+      "SNS:GetTopicAttributes",
+      "SNS:SetTopicAttributes",
+      "SNS:AddPermission",
+      "SNS:RemovePermission",
+      "SNS:DeleteTopic",
+      "SNS:Subscribe",
+      "SNS:ListSubscriptionsByTopic",
+      "SNS:Publish",
+      "SNS:Receive"
+    ]
+    resources = [
+      "${aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]}"
+    ]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::666402644145:user/georged"]
+    }
+  }
+}
+
+# data "aws_subnet_ids" "aws-subnet-by-az" {
+#   vpc_id = "${var.defaultAwsVpcId}"
+# }

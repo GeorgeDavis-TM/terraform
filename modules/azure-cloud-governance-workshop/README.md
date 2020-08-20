@@ -9,7 +9,7 @@ This module creates Azure resources in the following Azure services for the Clou
 - Azure Virtual Machines
 - Azure Block Storage
 - Azure Blob Storage
-- Azure LB (Unchecked)
+- ~~Azure LB (Unchecked)~~
 - ~~Azure IAM User~~
 - ~~Azure IAM Role~~
 - ~~Azure IAM Instance Profile~~
