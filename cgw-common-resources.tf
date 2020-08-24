@@ -11,9 +11,35 @@ resource "aws_instance" "cgw-common-db-instance" {
   }
 
   tags = {
-    Name    = "cgw-common-db-ec2-"
+    Name    = "cgw-common-db-ec2-instance"
     Owner   = var.tagOwner
-    Project = "cgw"
+    Project = "cgw-common"
+  }
+
+  provisioner "file" {
+    source      = local.dsaSourcePath
+    destination = local.dsaDestinationPath
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x ${local.dsaDestinationPath}",
+      "sudo ${local.dsaDestinationPath}"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(var.defaultAwsKeyPairFilePath)
+      host        = self.public_ip
+    }
   }
 }
 
@@ -24,13 +50,13 @@ resource "aws_eip" "cgw-common-db-instance-public-ip" {
   tags = {
     Name    = "cgw-common-db-instance-public-ip"
     Owner   = var.tagOwner
-    Project = "cgw"
+    Project = "cgw-common"
   }
 }
 
 resource "aws_security_group" "cgw-common-db-sg" {
   name        = "cgw-common-db-sg"
-  description = "Allow MySQL traffic"
+  description = "Allow CGW DB & Services traffic"
   # vpc_id      = "${aws_vpc.main.id }"
 
   ingress {
@@ -38,6 +64,13 @@ resource "aws_security_group" "cgw-common-db-sg" {
     to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = [var.localIpCidr]
+  }
+
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -50,7 +83,7 @@ resource "aws_security_group" "cgw-common-db-sg" {
   tags = {
     Name    = "cgw-common-db-sg"
     Owner   = var.tagOwner
-    Project = "cgw"
+    Project = "cgw-common"
   }
 }
 

@@ -52,11 +52,13 @@
 # -------------------------------------------------------------------
 
 # module "cgw-team6" {
-#   source  = "./modules/azure-cloud-governance-workshop"
-#   teamTag = "team6"
+#   source      = "./modules/azure-cloud-governance-workshop"
+#   teamTag     = "team6"
+#   teamMembers = ["george_davis@trendmicro.com"]
 # }
 
 # module "cgw-team7" {
-#   source  = "./modules/azure-cloud-governance-workshop"
-#   teamTag = "team7"
+#   source      = "./modules/azure-cloud-governance-workshop"
+#   teamTag     = "team7"
+#   teamMembers = ["george_davis@trendmicro.com", "antoine_saikaley@tclabs.ca", "yama_saadat@tclabs.ca"]
 # }

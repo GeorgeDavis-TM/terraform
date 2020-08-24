@@ -239,43 +239,43 @@ resource "azurerm_key_vault" "cgw-az-kv" {
   }
 }
 
-resource "azurerm_key_vault_key" "cgw-az-kv-key" {
-  name         = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
-  key_vault_id = azurerm_key_vault.cgw-az-kv.id
-  key_type     = "RSA"
-  key_size     = 2048
+# resource "azurerm_key_vault_key" "cgw-az-kv-key" {
+#   name         = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
+#   key_vault_id = azurerm_key_vault.cgw-az-kv.id
+#   key_type     = "RSA"
+#   key_size     = 2048
 
-  key_opts = [
-    "decrypt",
-    "encrypt",
-    "sign",
-    "unwrapKey",
-    "verify",
-    "wrapKey",
-  ]
+#   key_opts = [
+#     "decrypt",
+#     "encrypt",
+#     "sign",
+#     "unwrapKey",
+#     "verify",
+#     "wrapKey",
+#   ]
 
-  tags = {
-    Name      = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
-    Owner     = var.tagOwner
-    Team-UUID = join("", ["cgw-", random_string.unique-id.result])
-    Project   = "cgw"
-    Team      = var.teamTag
-  }
-}
+#   tags = {
+#     Name      = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
+#     Owner     = var.tagOwner
+#     Team-UUID = join("", ["cgw-", random_string.unique-id.result])
+#     Project   = "cgw"
+#     Team      = var.teamTag
+#   }
+# }
 
-resource "azurerm_key_vault_secret" "cgw-az-kv-secret" {
-  name         = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
-  value        = join("", ["cgw-", random_string.unique-id.result])
-  key_vault_id = azurerm_key_vault.cgw-az-kv.id
+# resource "azurerm_key_vault_secret" "cgw-az-kv-secret" {
+#   name         = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
+#   value        = join("", ["cgw-", random_string.unique-id.result])
+#   key_vault_id = azurerm_key_vault.cgw-az-kv.id
 
-  tags = {
-    Name      = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
-    Owner     = var.tagOwner
-    Team-UUID = join("", ["cgw-", random_string.unique-id.result])
-    Project   = "cgw"
-    Team      = var.teamTag
-  }
-}
+#   tags = {
+#     Name      = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
+#     Owner     = var.tagOwner
+#     Team-UUID = join("", ["cgw-", random_string.unique-id.result])
+#     Project   = "cgw"
+#     Team      = var.teamTag
+#   }
+# }
 
 resource "aws_cloudformation_stack" "cgw-aws-sns" {
   name = join("", ["cgw-aws-sns-", random_string.unique-id.result])
@@ -317,10 +317,10 @@ resource "local_file" "mysql-script" {
 
 resource "null_resource" "mysql-run" {
   connection {
-    type     = "ssh"
-    user     = local.vmUser
-    password = local.vmPass
-    host     = local.mysqlHostIP
+    type        = "ssh"
+    user        = local.vmUser
+    private_key = file(var.dbAwsKeyPairFilePath)
+    host        = local.mysqlHostIP
   }
 
   provisioner "file" {
@@ -349,17 +349,18 @@ resource "null_resource" "mysql-run" {
   }
 }
 
-resource "null_resource" "cgw-conformity-api-az-script-run" {
-  provisioner "file" {
-    content = templatefile("${path.module}/az-conformity-api-cmd-template.tpl", {
-      cgw-az-uuid               = random_string.unique-id.result
-      cgw-aws-cf-stack-arn      = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
-      cgw-az-conformity-acct-id = local.conformityAzAccountId
-    })
-    destination = "${path.module}/conformity-api-cmd-${random_string.unique-id.result}.sh"
-  }
+resource "local_file" "cgw-conformity-api-az-script" {
+  content = templatefile("${path.module}/az-conformity-api-cmd-template.tpl", {
+    cgw-az-uuid               = random_string.unique-id.result
+    cgw-aws-cf-stack-arn      = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+    cgw-az-conformity-acct-id = local.conformityAzAccountId
+  })
+  filename = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
+}
 
+resource "null_resource" "cgw-conformity-api-az-script-run" {
   provisioner "local-exec" {
-    command = "./${path.module}/conformity-api-cmd-${random_string.unique-id.result}.sh"
+    command     = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
+    interpreter = ["/bin/bash"]
   }
 }

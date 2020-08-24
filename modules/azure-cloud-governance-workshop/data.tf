@@ -2,21 +2,31 @@ data "azurerm_client_config" "current" {}
 
 data "aws_iam_policy_document" "cgw-aws-sns-policy-doc" {
   statement {
+    sid = join("", ["CGWConformityCrossAccountRole", random_string.unique-id.result])
     actions = [
-      "sns:Publish"
+      "SNS:Publish"
     ]
     resources = [
       "${aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]}"
     ]
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:sts::717210094962:assumed-role/setting-v1-us-west-2-lambdaRole/setting-v1-privateCreate"]
+      identifiers = ["arn:aws:iam::717210094962:root"]
     }
   }
 
   statement {
+    sid = join("", ["CGWSnsRole", random_string.unique-id.result])
     actions = [
-      "sns:*"
+      "SNS:GetTopicAttributes",
+      "SNS:SetTopicAttributes",
+      "SNS:AddPermission",
+      "SNS:RemovePermission",
+      "SNS:DeleteTopic",
+      "SNS:Subscribe",
+      "SNS:ListSubscriptionsByTopic",
+      "SNS:Publish",
+      "SNS:Receive"
     ]
     resources = [
       "${aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]}"

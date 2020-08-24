@@ -27,3 +27,8 @@
 > 5. Complete API Server Code - **IN PROGRESS**
 > 6. Finalize DB scripts - **IN PROGRESS**
 > 7. Auto-remediate - **IN PROGRESS**
+
+### Cleanup
+---
+
+> 1. Comment the CGW Common resources terraform template

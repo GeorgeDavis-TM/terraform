@@ -30,7 +30,8 @@ override.tf.json
 # example: *tfplan*
 
 # Custom exceptions
-modules/cloud-governance-workshop/*.sql
+modules/aws-cloud-governance-workshop/*.sql
+modules/azure-cloud-governance-workshop/*.sql
 
 # Apple MacBook macOS exceptions
 .DS_Store

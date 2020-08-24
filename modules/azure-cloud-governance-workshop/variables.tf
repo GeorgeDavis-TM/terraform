@@ -1,4 +1,10 @@
-variable "teamTag" {} # Input parameter from the root module invocation
+variable "teamTag" {
+  type = string
+} # Input parameter from the root module invocation
+
+variable "teamMembers" {
+  type = list(string)
+} # Input parameter from the root module invocation
 
 variable "defaultAzureRegion" {
   default     = "Canada Central"

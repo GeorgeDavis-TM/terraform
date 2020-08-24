@@ -196,7 +196,7 @@ resource "aws_iam_user" "cgw-aws-iam-user" {
 resource "aws_iam_user_login_profile" "cgw-aws-iam-user-login-profile" {
   user                    = aws_iam_user.cgw-aws-iam-user.name
   password_reset_required = false
-  pgp_key                 = var.defaultPgpPubKeyBase64Encoded
+  pgp_key                 = "keybase:georgedavistm"
 }
 
 resource "aws_iam_role" "cgw-aws-iam-role" {
@@ -447,9 +447,9 @@ resource "local_file" "cgw-conformity-api-aws-script" {
   filename = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
 }
 
-# resource "null_resource" "cgw-conformity-api-aws-script-run" {
-#   provisioner "local-exec" {
-#     command     = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
-#     interpreter = ["/bin/bash"]
-#   }
-# }
+resource "null_resource" "cgw-conformity-api-aws-script-run" {
+  provisioner "local-exec" {
+    command     = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
+    interpreter = ["/bin/bash"]
+  }
+}
