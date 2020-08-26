@@ -24,7 +24,10 @@ CREATE TABLE IF NOT EXISTS tbl_cgw_aws_resources (
     cgw_aws_iam_role VARCHAR(50) NOT NULL,     
     cgw_aws_iam_instance_profile VARCHAR(50) NOT NULL,
     cgw_aws_iam_policy VARCHAR(50) NOT NULL,  
-    cgw_aws_ssh_sg VARCHAR(50) NOT NULL
+    cgw_aws_ssh_sg VARCHAR(50) NOT NULL,
+    cgw_aws_kms_key VARCHAR(200) NOT NULL,
+    cgw_aws_elb VARCHAR(50) NOT NULL,
+    cgw_aws_sns_topic VARCHAR(200) NOT NULL
 );
 
 DROP PROCEDURE IF EXISTS CgwAwsUpdateOrInsert;
@@ -41,7 +44,10 @@ CREATE PROCEDURE CgwAwsUpdateOrInsert(
     IN _cgw_aws_iam_role VARCHAR(50),     
     IN _cgw_aws_iam_instance_profile VARCHAR(50),
     IN _cgw_aws_iam_policy VARCHAR(50),  
-    IN _cgw_aws_ssh_sg VARCHAR(50)
+    IN _cgw_aws_ssh_sg VARCHAR(50),
+    IN _cgw_aws_kms_key VARCHAR(100),
+    IN _cgw_aws_elb VARCHAR(100),
+    IN _cgw_aws_sns_topic VARCHAR(200)
 )
 BEGIN
   IF EXISTS (SELECT cgw_aws_uuid FROM tbl_cgw_aws_resources WHERE cgw_aws_uuid = _cgw_aws_uuid) THEN
@@ -55,11 +61,14 @@ BEGIN
         cgw_aws_iam_role = _cgw_aws_iam_role,
         cgw_aws_iam_instance_profile = _cgw_aws_iam_instance_profile,
         cgw_aws_iam_policy = _cgw_aws_iam_policy,
-        cgw_aws_ssh_sg = _cgw_aws_ssh_sg
+        cgw_aws_ssh_sg = _cgw_aws_ssh_sg,
+        cgw_aws_kms_key = _cgw_aws_kms_key,
+        cgw_aws_elb = _cgw_aws_elb,
+        cgw_aws_sns_topic = _cgw_aws_sns_topic
     WHERE 
         cgw_aws_uuid = _cgw_aws_uuid;
   ELSE 
-    INSERT INTO tbl_cgw_aws_resources (`cgw_aws_uuid`, `cgw_aws_instance_public_ip`, `cgw_aws_instance_id`, `cgw_aws_vol`, `cgw_aws_s3_bucket`, `cgw_aws_iam_user`, `cgw_aws_iam_user_password`, `cgw_aws_iam_role`, `cgw_aws_iam_instance_profile`, `cgw_aws_iam_policy`, `cgw_aws_ssh_sg`) VALUES (_cgw_aws_uuid, _cgw_aws_instance_public_ip, _cgw_aws_instance_id, _cgw_aws_vol, _cgw_aws_s3_bucket, _cgw_aws_iam_user, _cgw_aws_iam_user_password, _cgw_aws_iam_role, _cgw_aws_iam_instance_profile, _cgw_aws_iam_policy, _cgw_aws_ssh_sg);
+    INSERT INTO tbl_cgw_aws_resources (`cgw_aws_uuid`, `cgw_aws_instance_public_ip`, `cgw_aws_instance_id`, `cgw_aws_vol`, `cgw_aws_s3_bucket`, `cgw_aws_iam_user`, `cgw_aws_iam_user_password`, `cgw_aws_iam_role`, `cgw_aws_iam_instance_profile`, `cgw_aws_iam_policy`, `cgw_aws_ssh_sg`, `cgw_aws_kms_key`, `cgw_aws_elb`, `cgw_aws_sns_topic`) VALUES (_cgw_aws_uuid, _cgw_aws_instance_public_ip, _cgw_aws_instance_id, _cgw_aws_vol, _cgw_aws_s3_bucket, _cgw_aws_iam_user, _cgw_aws_iam_user_password, _cgw_aws_iam_role, _cgw_aws_iam_instance_profile, _cgw_aws_iam_policy, _cgw_aws_ssh_sg, _cgw_aws_kms_key, _cgw_aws_elb, _cgw_aws_sns_topic);
   END IF;
 END $$
 DELIMITER ;
@@ -67,4 +76,4 @@ DELIMITER ;
 GRANT EXECUTE ON PROCEDURE tm_cgw_db.CgwAwsUpdateOrInsert TO 'tm_db_user'@'localhost';  
 GRANT EXECUTE ON PROCEDURE tm_cgw_db.CgwAwsUpdateOrInsert TO 'tm_db_user'@'%'; 
 
-CALL CgwAwsUpdateOrInsert("${cgw-aws-uuid}", "${cgw-aws-instance-public-ip}", "${cgw-aws-instance-id}", "${cgw-aws-vol}", "${cgw-aws-s3-bucket}", "${cgw-aws-iam-user}"," ${cgw-aws-iam-user-password}", "${cgw-aws-iam-role}", "${cgw-aws-iam-instance-profile}", "${cgw-aws-iam-policy}", "${cgw-aws-ssh-sg}");
+CALL CgwAwsUpdateOrInsert("${cgw-aws-uuid}", "${cgw-aws-instance-public-ip}", "${cgw-aws-instance-id}", "${cgw-aws-vol}", "${cgw-aws-s3-bucket}", "${cgw-aws-iam-user}"," ${cgw-aws-iam-user-password}", "${cgw-aws-iam-role}", "${cgw-aws-iam-instance-profile}", "${cgw-aws-iam-policy}", "${cgw-aws-ssh-sg}", "${cgw-aws-kms-key}", "${cgw-aws-elb}", "${cgw-aws-sns-topic}");

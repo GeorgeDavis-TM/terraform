@@ -45,7 +45,7 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
       "s3:*"
     ]
     resources = [
-      "arn:aws:s3:::*"
+      "*"
     ]
     condition {
       test     = "StringEquals"
@@ -62,7 +62,7 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
       "ec2:*"
     ]
     resources = [
-      "arn:aws:ec2:*:*:instance/*"
+      "*"
     ]
     condition {
       test     = "StringEquals"
@@ -94,6 +94,40 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
     sid = join("", ["CGWIamRole", random_string.unique-id.result])
     actions = [
       "iam:*"
+    ]
+    resources = [
+      "*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:ResourceTag/Team-UUID"
+      values = [
+        join("", ["cgw-aws-", random_string.unique-id.result])
+      ]
+    }
+  }
+
+  statement {
+    sid = join("", ["CGWLambdaRole", random_string.unique-id.result])
+    actions = [
+      "lambda:*"
+    ]
+    resources = [
+      "*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:ResourceTag/Team-UUID"
+      values = [
+        join("", ["cgw-aws-", random_string.unique-id.result])
+      ]
+    }
+  }
+
+  statement {
+    sid = join("", ["CGWSnsRole", random_string.unique-id.result])
+    actions = [
+      "SNS:Publish"
     ]
     resources = [
       "*"
@@ -143,6 +177,38 @@ data "aws_iam_policy_document" "cgw-aws-sns-policy-doc" {
       type        = "AWS"
       identifiers = ["arn:aws:iam::666402644145:user/georged"]
     }
+  }
+}
+
+data "aws_iam_policy_document" "cgw-aws-lambda-sns-policy-doc" {
+  statement {
+    sid = join("", ["CGWLambdaSnsServiceRole", random_string.unique-id.result])
+    actions = [
+      "SNS:GetTopicAttributes",
+      "SNS:SetTopicAttributes",
+      "SNS:AddPermission",
+      "SNS:RemovePermission",
+      "SNS:DeleteTopic",
+      "SNS:Subscribe",
+      "SNS:ListSubscriptionsByTopic",
+      "SNS:Publish",
+      "SNS:Receive"
+    ]
+    resources = [
+      "${aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]}"
+    ]
+  }
+
+  statement {
+    sid = join("", ["CGWLambdaBasicExecutionRole", random_string.unique-id.result])
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "arn:aws:logs:*:*:*"
+    ]
   }
 }
 

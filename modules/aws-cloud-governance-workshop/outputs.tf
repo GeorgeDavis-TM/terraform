@@ -56,6 +56,11 @@ output "cgw-aws-ssh-sg" {
 }
 
 output "cgw-aws-cf-stack-arn" {
-  description = "ARN of the Email SNS topic"
+  description = "ARN of the Email SNS Topic"
   value       = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+}
+
+output "cgw-aws-sns-policy" {
+  description = "ARN of the Email SNS Policy"
+  value       = aws_sns_topic_policy.cgw-aws-sns-policy.arn
 }

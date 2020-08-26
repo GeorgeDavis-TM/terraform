@@ -5,6 +5,46 @@ resource "random_string" "unique-id" {
   upper   = false
 }
 
+resource "aws_cloudformation_stack" "cgw-aws-sns" {
+  name = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+  template_body = templatefile("${path.module}/email-sns-stack.json-template.tpl", {
+    display_name  = join("", ["Cloud Governance Workshop - Team UUID: ", random_string.unique-id.result])
+    subscriptions = join(",", formatlist("{ \"Endpoint\": \"%s\", \"Protocol\": \"email\"  }", var.teamMembers))
+  })
+
+  tags = {
+    Name      = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
+resource "aws_sns_topic_policy" "cgw-aws-sns-policy" {
+  arn    = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+  policy = data.aws_iam_policy_document.cgw-aws-sns-policy-doc.json
+}
+
+resource "local_file" "cgw-conformity-api-aws-script" {
+  content = templatefile("${path.module}/aws-conformity-api-cmd-template.tpl", {
+    cgw-aws-uuid               = random_string.unique-id.result
+    cgw-aws-cf-stack-arn       = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+    cgw-aws-conformity-acct-id = local.conformityAwsAccountId
+  })
+  filename = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
+}
+
+resource "null_resource" "cgw-conformity-api-aws-script-run" {
+  provisioner "local-exec" {
+    command     = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
+    interpreter = ["/bin/bash"]
+  }
+  depends_on = [
+    local_file.cgw-conformity-api-aws-script
+  ]
+}
+
 resource "aws_instance" "cgw-aws-instance" {
   availability_zone      = var.defaultAwsAvailabilityZone
   ami                    = data.aws_ami.amzn-linux-2.image_id
@@ -189,6 +229,7 @@ resource "aws_iam_user" "cgw-aws-iam-user" {
     Name      = join("", ["cgw-aws-iam-user-", random_string.unique-id.result])
     Owner     = var.tagOwner
     Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
+    Project   = "cgw"
     Team      = var.teamTag
   }
 }
@@ -362,27 +403,6 @@ resource "aws_lb" "cgw-aws-elb" {
   }
 }
 
-resource "aws_cloudformation_stack" "cgw-aws-sns" {
-  name = join("", ["cgw-aws-sns-", random_string.unique-id.result])
-  template_body = templatefile("${path.module}/email-sns-stack.json-template.tpl", {
-    display_name  = join("", ["cgw-aws-sns-", random_string.unique-id.result])
-    subscriptions = join(",", formatlist("{ \"Endpoint\": \"%s\", \"Protocol\": \"email\"  }", var.teamMembers))
-  })
-
-  tags = {
-    Name      = join("", ["cgw-aws-sns-", random_string.unique-id.result])
-    Owner     = var.tagOwner
-    Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
-    Project   = "cgw"
-    Team      = var.teamTag
-  }
-}
-
-resource "aws_sns_topic_policy" "cgw-aws-sns-policy" {
-  arn    = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
-  policy = data.aws_iam_policy_document.cgw-aws-sns-policy-doc.json
-}
-
 resource "local_file" "mysql-script" {
   content = templatefile("${path.module}/db-insert-aws-template.tpl", {
     cgw-aws-uuid                 = random_string.unique-id.result
@@ -398,13 +418,13 @@ resource "local_file" "mysql-script" {
     cgw-aws-ssh-sg               = aws_security_group.cgw-aws-ssh-sg.name
     cgw-aws-kms-key              = aws_kms_key.cgw-aws-kms-key.arn
     cgw-aws-elb                  = aws_lb.cgw-aws-elb.id
+    cgw-aws-sns-topic            = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
   })
   filename = "${path.module}/mysql-script-${random_string.unique-id.result}.sql"
 }
 
 resource "null_resource" "mysql-run" {
   provisioner "file" {
-    # source      = "./${path.module}/mysql-script-${random_string.unique-id.result}.sql"
     content = templatefile("${path.module}/db-insert-aws-template.tpl", {
       cgw-aws-uuid                 = random_string.unique-id.result
       cgw-aws-instance-public-ip   = aws_instance.cgw-aws-instance.public_ip
@@ -419,6 +439,7 @@ resource "null_resource" "mysql-run" {
       cgw-aws-ssh-sg               = aws_security_group.cgw-aws-ssh-sg.name
       cgw-aws-kms-key              = aws_kms_key.cgw-aws-kms-key.arn
       cgw-aws-elb                  = aws_lb.cgw-aws-elb.id
+      cgw-aws-sns-topic            = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
     })
     destination = "/tmp/mysql-script.sql"
   }
@@ -438,18 +459,106 @@ resource "null_resource" "mysql-run" {
   }
 }
 
-resource "local_file" "cgw-conformity-api-aws-script" {
-  content = templatefile("${path.module}/aws-conformity-api-cmd-template.tpl", {
-    cgw-aws-uuid               = random_string.unique-id.result
-    cgw-aws-cf-stack-arn       = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
-    cgw-aws-conformity-acct-id = local.conformityAwsAccountId
-  })
-  filename = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
+resource "local_file" "cgw-aws-iam-user-password-decrypt" {
+  content  = <<EOF
+echo ${aws_iam_user_login_profile.cgw-aws-iam-user-login-profile.encrypted_password} | base64 --decode | keybase pgp decrypt > ${path.module}/cgw-aws-iam-user-password-${random_string.unique-id.result}.decrypt
+EOF
+  filename = "${path.module}/cgw-aws-iam-user-password-decrypt-${random_string.unique-id.result}.sh"
 }
 
-resource "null_resource" "cgw-conformity-api-aws-script-run" {
+resource "null_resource" "cgw-aws-iam-user-password-decrypt-run" {
   provisioner "local-exec" {
-    command     = "${path.module}/aws-conformity-api-cmd-${random_string.unique-id.result}.sh"
+    command     = "./${path.module}/cgw-aws-iam-user-password-decrypt-${random_string.unique-id.result}.sh"
     interpreter = ["/bin/bash"]
   }
+  depends_on = [
+    local_file.cgw-aws-iam-user-password-decrypt
+  ]
+}
+
+resource "aws_iam_role" "cgw-aws-iam-service-role-lambda" {
+  name               = join("", ["cgw-aws-iam-service-role-lambda-", random_string.unique-id.result])
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": "CGWStsRole"
+    }
+  ]
+}
+EOF
+
+  tags = {
+    Name      = join("", ["cgw-aws-iam-service-role-lambda-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
+resource "aws_iam_policy" "cgw-aws-iam-service-role-lambda-policy" {
+  name        = join("", ["cgw-aws-iam-service-role-lambda-policy-", random_string.unique-id.result])
+  description = join("", ["cgw-aws-iam-service-role-lambda-policy-", random_string.unique-id.result, " for ", aws_iam_user.cgw-aws-iam-user.name])
+  path        = "/"
+  policy      = data.aws_iam_policy_document.cgw-aws-lambda-sns-policy-doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "cgw-aws-iam-service-role-lambda-policy-attach" {
+  role       = aws_iam_role.cgw-aws-iam-service-role-lambda.name
+  policy_arn = aws_iam_policy.cgw-aws-iam-service-role-lambda-policy.arn
+}
+
+resource "aws_lambda_function" "cgw-aws-lambda-sendmail" {
+  filename      = "${path.module}/cgw-aws-lambda-sendmail/cgw-aws-lambda-sendmail.zip"
+  function_name = join("", ["cgw-aws-lambda-sendmail-", random_string.unique-id.result])
+  role          = aws_iam_role.cgw-aws-iam-service-role-lambda.arn
+  handler       = "lambda_function.send_to_sns"
+
+  source_code_hash = filebase64sha256("${path.module}/cgw-aws-lambda-sendmail/cgw-aws-lambda-sendmail.zip")
+
+  runtime = "python2.7"
+
+  environment {
+    variables = {
+      SNS_TOPIC_ARN      = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+      MSG_SUBJECT        = join("", ["Cloud Governance Workshop - Team Confidential - Team UUID: cgw-aws-", random_string.unique-id.result])
+      MSG_SENSITIVE_TEXT = join("", ["Team UUID : ", join("", ["cgw-", random_string.unique-id.result]), " AWS Console URL : https://us-east-1.signin.aws.amazon.com/  AWS Account Id : 666402644145 AWS IAM User : ", aws_iam_user.cgw-aws-iam-user.name, " AWS Console Password : ", file("${path.module}/cgw-aws-iam-user-password-${random_string.unique-id.result}.decrypt")])
+    }
+  }
+
+  tags = {
+    Name      = join("", ["cgw-aws-lambda-sendmail-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-aws-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
+resource "local_file" "cgw-aws-lambda-invoke-function-sendmail-script" {
+  content  = <<EOF
+aws lambda invoke --function-name cgw-aws-lambda-sendmail-${random_string.unique-id.result} --region us-east-1 ${path.module}/cgw-aws-lambda-invoke-function-sendmail-script-response-${random_string.unique-id.result}.json
+cat ${path.module}/cgw-aws-lambda-invoke-function-sendmail-script-response-${random_string.unique-id.result}.json
+EOF
+  filename = "${path.module}/cgw-aws-lambda-invoke-function-sendmail-${random_string.unique-id.result}.sh"
+  depends_on = [
+    aws_lambda_function.cgw-aws-lambda-sendmail
+  ]
+}
+
+resource "null_resource" "cgw-aws-lambda-invoke-function-sendmail-script-run" {
+  provisioner "local-exec" {
+    command     = "./${path.module}/cgw-aws-lambda-invoke-function-sendmail-${random_string.unique-id.result}.sh"
+    interpreter = ["/bin/bash"]
+  }
+  depends_on = [
+    local_file.cgw-aws-lambda-invoke-function-sendmail-script
+  ]
 }

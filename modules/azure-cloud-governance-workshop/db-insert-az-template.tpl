@@ -36,10 +36,10 @@ CREATE PROCEDURE CgwAzUpdateOrInsert(
 BEGIN
   IF EXISTS (SELECT cgw_az_uuid FROM tbl_cgw_az_resources WHERE cgw_az_uuid = _cgw_az_uuid) THEN
     UPDATE tbl_cgw_az_resources SET
-        cgw_az_public_ip = _cgw_az_public_ip
-        cgw_az_nic = _cgw_az_nic
-        cgw_az_vm = _cgw_az_vm
-        cgw_az_sc = _cgw_az_sc
+        cgw_az_public_ip = _cgw_az_public_ip,
+        cgw_az_nic = _cgw_az_nic,
+        cgw_az_vm = _cgw_az_vm,
+        cgw_az_sc = _cgw_az_sc,
         cgw_az_ssh_sg = _cgw_az_ssh_sg
     WHERE 
         cgw_az_uuid = _cgw_az_uuid;

@@ -5,6 +5,46 @@ resource "random_string" "unique-id" {
   upper   = false
 }
 
+resource "aws_cloudformation_stack" "cgw-aws-sns" {
+  name = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+  template_body = templatefile("${path.module}/email-sns-stack.json-template.tpl", {
+    display_name  = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+    subscriptions = join(",", formatlist("{ \"Endpoint\": \"%s\", \"Protocol\": \"email\"  }", var.teamMembers))
+  })
+
+  tags = {
+    Name      = join("", ["cgw-aws-sns-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-az-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
+resource "aws_sns_topic_policy" "cgw-aws-sns-policy" {
+  arn    = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+  policy = data.aws_iam_policy_document.cgw-aws-sns-policy-doc.json
+}
+
+resource "local_file" "cgw-conformity-api-az-script" {
+  content = templatefile("${path.module}/az-conformity-api-cmd-template.tpl", {
+    cgw-az-uuid               = random_string.unique-id.result
+    cgw-aws-cf-stack-arn      = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
+    cgw-az-conformity-acct-id = local.conformityAzAccountId
+  })
+  filename = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
+}
+
+resource "null_resource" "cgw-conformity-api-az-script-run" {
+  provisioner "local-exec" {
+    command     = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
+    interpreter = ["/bin/bash"]
+  }
+  depends_on = [
+    local_file.cgw-conformity-api-az-script
+  ]
+}
+
 resource "azurerm_public_ip" "cgw-az-public-ip" {
   name                = join("", ["cgw-az-public-ip-", random_string.unique-id.result])
   resource_group_name = var.defaultAzureResourceGroupName
@@ -277,27 +317,6 @@ resource "azurerm_key_vault" "cgw-az-kv" {
 #   }
 # }
 
-resource "aws_cloudformation_stack" "cgw-aws-sns" {
-  name = join("", ["cgw-aws-sns-", random_string.unique-id.result])
-  template_body = templatefile("${path.module}/email-sns-stack.json-template.tpl", {
-    display_name  = join("", ["cgw-aws-sns-", random_string.unique-id.result])
-    subscriptions = join(",", formatlist("{ \"Endpoint\": \"%s\", \"Protocol\": \"email\"  }", var.teamMembers))
-  })
-
-  tags = {
-    Name      = join("", ["cgw-aws-sns-", random_string.unique-id.result])
-    Owner     = var.tagOwner
-    Team-UUID = join("", ["cgw-az-", random_string.unique-id.result])
-    Project   = "cgw"
-    Team      = var.teamTag
-  }
-}
-
-resource "aws_sns_topic_policy" "cgw-aws-sns-policy" {
-  arn    = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
-  policy = data.aws_iam_policy_document.cgw-aws-sns-policy-doc.json
-}
-
 resource "local_file" "mysql-script" {
   content = templatefile("${path.module}/db-insert-az-template.tpl", {
     cgw-az-uuid      = random_string.unique-id.result
@@ -316,15 +335,7 @@ resource "local_file" "mysql-script" {
 }
 
 resource "null_resource" "mysql-run" {
-  connection {
-    type        = "ssh"
-    user        = local.vmUser
-    private_key = file(var.dbAwsKeyPairFilePath)
-    host        = local.mysqlHostIP
-  }
-
   provisioner "file" {
-    # source      = "./${path.module}/mysql-script-${random_string.unique-id.result}.sql"
     content = templatefile("${path.module}/db-insert-az-template.tpl", {
       cgw-az-uuid      = random_string.unique-id.result
       cgw-az-public-ip = azurerm_public_ip.cgw-az-public-ip.ip_address
@@ -347,20 +358,11 @@ resource "null_resource" "mysql-run" {
       "rm -rf /tmp/mysql-script.sql"
     ]
   }
-}
 
-resource "local_file" "cgw-conformity-api-az-script" {
-  content = templatefile("${path.module}/az-conformity-api-cmd-template.tpl", {
-    cgw-az-uuid               = random_string.unique-id.result
-    cgw-aws-cf-stack-arn      = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
-    cgw-az-conformity-acct-id = local.conformityAzAccountId
-  })
-  filename = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
-}
-
-resource "null_resource" "cgw-conformity-api-az-script-run" {
-  provisioner "local-exec" {
-    command     = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
-    interpreter = ["/bin/bash"]
+  connection {
+    type        = "ssh"
+    user        = local.vmUser
+    private_key = file(var.dbAwsKeyPairFilePath)
+    host        = local.mysqlHostIP
   }
 }
