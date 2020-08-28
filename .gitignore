@@ -30,16 +30,22 @@ override.tf.json
 # example: *tfplan*
 
 # Custom exceptions
+
+## AWS
 modules/aws-cloud-governance-workshop/*.sql
-modules/azure-cloud-governance-workshop/*.sql
 
 modules/aws-cloud-governance-workshop/*.sh
-modules/azure-cloud-governance-workshop/*.sh
 
 modules/aws-cloud-governance-workshop/*.json
-modules/azure-cloud-governance-workshop/*.json
 
 modules/aws-cloud-governance-workshop/*.decrypt
+
+## Azure
+modules/azure-cloud-governance-workshop/*.sql
+
+modules/azure-cloud-governance-workshop/*.sh
+
+modules/azure-cloud-governance-workshop/*.json
 
 # Apple MacBook macOS exceptions
 .DS_Store

@@ -14,7 +14,7 @@
 # module "cgw-team2" {
 #   source      = "./modules/aws-cloud-governance-workshop"
 #   teamTag     = "team2"
-#   teamMembers = ["george_davis@trendmicro.com"]
+#   teamMembers = ["george_davis@trendmicro.com", ]
 #   providers = {
 #     aws = aws.use1
 #   }

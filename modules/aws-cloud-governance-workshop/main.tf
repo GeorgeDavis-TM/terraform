@@ -562,3 +562,93 @@ resource "null_resource" "cgw-aws-lambda-invoke-function-sendmail-script-run" {
     local_file.cgw-aws-lambda-invoke-function-sendmail-script
   ]
 }
+
+resource "local_file" "cgw-aws-iam-user-ses-email-destinations" {
+  content  = join(",", formatlist("{ \"Destination\": { \"ToAddresses\": [ \"%s\" ] } }", var.teamMembers))
+  filename = "${path.module}/cgw-aws-iam-user-ses-email-destinations-${random_string.unique-id.result}.json"
+  depends_on = [
+    null_resource.cgw-aws-iam-user-password-decrypt-run
+  ]
+}
+
+resource "local_file" "cgw-aws-iam-user-ses-template-json" {
+  content = templatefile("${path.module}/cgw-aws-iam-user-ses-trigger.json-template.tpl", {
+    cgw-workshop-web                        = local.cgwWorkshopWebUrl
+    cgw-aws-uuid                            = random_string.unique-id.result
+    cgw-aws-console-url                     = local.awsConsoleUrl
+    cgw-aws-account-id                      = local.awsAccountId
+    cgw-aws-iam-user                        = aws_iam_user.cgw-aws-iam-user.name
+    cgw-aws-iam-user-console-password       = file("${path.module}/cgw-aws-iam-user-password-${random_string.unique-id.result}.decrypt")
+    cgw-aws-iam-user-ses-email-destinations = file("${path.module}/cgw-aws-iam-user-ses-email-destinations-${random_string.unique-id.result}.json")
+  })
+  filename = "${path.module}/cgw-aws-iam-user-ses-email-${random_string.unique-id.result}.json"
+  depends_on = [
+    null_resource.cgw-aws-iam-user-password-decrypt-run,
+    local_file.cgw-aws-iam-user-ses-email-destinations
+  ]
+}
+
+resource "local_file" "cgw-aws-iam-user-ses-send-templated-email-script" {
+  content  = <<EOF
+cd ${path.module}
+aws ses send-bulk-templated-email --cli-input-json file://cgw-aws-iam-user-ses-email-${random_string.unique-id.result}.json
+EOF
+  filename = "${path.module}/cgw-aws-iam-user-ses-send-templated-email-script-${random_string.unique-id.result}.sh"
+}
+
+resource "null_resource" "cgw-aws-iam-user-ses-send-templated-email-script-run" {
+  provisioner "local-exec" {
+    command     = "./${path.module}/cgw-aws-iam-user-ses-send-templated-email-script-${random_string.unique-id.result}.sh"
+    interpreter = ["/bin/bash"]
+  }
+  depends_on = [
+    local_file.cgw-aws-iam-user-ses-template-json,
+    local_file.cgw-aws-iam-user-ses-send-templated-email-script
+  ]
+}
+
+resource "local_file" "cgw-aws-conformity-ses-email-destinations" {
+  content  = join(",", formatlist("{ \"Destination\": { \"ToAddresses\": [ \"%s\" ] } }", var.teamMembers))
+  filename = "${path.module}/cgw-aws-conformity-ses-email-destinations-${random_string.unique-id.result}.json"
+  depends_on = [
+    null_resource.cgw-aws-iam-user-password-decrypt-run
+  ]
+}
+
+resource "local_file" "cgw-aws-conformity-ses-template-json" {
+  content = templatefile("${path.module}/cgw-aws-conformity-ses-trigger.json-template.tpl", {
+    cgw-aws-uuid                              = random_string.unique-id.result
+    cgw-aws-conformity-url                    = random_string.unique-id.result
+    cgw-aws-conformity-rule-id                = random_string.unique-id.result
+    cgw-aws-conformity-rule-title             = random_string.unique-id.result
+    cgw-aws-resource-link                     = random_string.unique-id.result
+    cgw-aws-conformity-status                 = random_string.unique-id.result
+    cgw-aws-conformity-message                = random_string.unique-id.result
+    cgw-aws-conformity-risk-level             = random_string.unique-id.result
+    cgw-aws-conformity-categories             = random_string.unique-id.result
+    cgw-aws-conformity-ses-email-destinations = file("${path.module}/cgw-aws-conformity-ses-email-destinations-${random_string.unique-id.result}.json")
+  })
+  filename = "${path.module}/cgw-aws-conformity-ses-email-${random_string.unique-id.result}.json"
+  depends_on = [
+    local_file.cgw-aws-iam-user-ses-email-destinations
+  ]
+}
+
+resource "local_file" "cgw-aws-conformity-ses-send-templated-email-script" {
+  content  = <<EOF
+cd ${path.module}
+aws ses send-bulk-templated-email --cli-input-json file://cgw-aws-conformity-ses-email-${random_string.unique-id.result}.json
+EOF
+  filename = "${path.module}/cgw-aws-conformity-ses-send-templated-email-script-${random_string.unique-id.result}.sh"
+}
+
+resource "null_resource" "cgw-aws-conformity-ses-send-templated-email-script-run" {
+  provisioner "local-exec" {
+    command     = "./${path.module}/cgw-aws-conformity-ses-send-templated-email-script-${random_string.unique-id.result}.sh"
+    interpreter = ["/bin/bash"]
+  }
+  depends_on = [
+    local_file.cgw-aws-iam-user-ses-template-json,
+    local_file.cgw-aws-conformity-ses-send-templated-email-script
+  ]
+}
