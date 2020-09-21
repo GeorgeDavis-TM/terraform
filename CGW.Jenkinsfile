@@ -1,5 +1,7 @@
 pipeline {
-    agent master
+    agent { 
+        label 'terraform' 
+    }
     stages {
         stage('Pre-cleanup') {
             sh '''                                
