@@ -4,14 +4,18 @@ pipeline {
     }
     stages {
         stage('Pre-cleanup') {
-            sh '''                                
-                terraform version
-            '''
+            steps {
+                sh '''                                
+                    terraform version
+                '''
+            }            
         }
         stage('Prep Terraform') {
-            sh '''                
-                terraform init
-            '''
+            steps {
+                sh '''                
+                    terraform init
+                '''
+            }            
         }
     }
 }
