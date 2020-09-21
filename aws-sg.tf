@@ -7,14 +7,21 @@ resource "aws_security_group" "georged-nodejs-sg" {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
-    cidr_blocks = [var.localIpCidr]
+    cidr_blocks = var.localIpCidr
+  }
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = var.localIpCidr
   }
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.localIpCidr]
+    cidr_blocks = var.localIpCidr
   }
 
   egress {
@@ -39,7 +46,7 @@ resource "aws_security_group" "georged-k8s-sg" {
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
-    cidr_blocks = [var.localIpCidr]
+    cidr_blocks = var.localIpCidr
   }
 
   egress {
@@ -64,7 +71,7 @@ resource "aws_security_group" "georged-ssh-sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.localIpCidr]
+    cidr_blocks = var.localIpCidr
   }
 
   egress {
@@ -101,6 +108,31 @@ resource "aws_security_group" "georged-https-sg" {
 
   tags = {
     Name  = "georged-https-sg"
+    Owner = var.tagOwner
+  }
+}
+
+resource "aws_security_group" "georged-http-sg" {
+  name        = "georged-http-sg"
+  description = "Allow HTTP traffic"
+  # vpc_id      = "${aws_vpc.main.id }"
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name  = "georged-http-sg"
     Owner = var.tagOwner
   }
 }

@@ -52,7 +52,7 @@ DELIMITER ;
 GRANT EXECUTE ON PROCEDURE tm_cgw_db.CgwAzUpdateOrInsert TO 'tm_db_user'@'localhost';  
 GRANT EXECUTE ON PROCEDURE tm_cgw_db.CgwAzUpdateOrInsert TO 'tm_db_user'@'%'; 
 
-CALL CgwAzUpdateOrInsert("${cgw-az-uuid}", "${cgw-az-public-ip}", "${cgw-az-nic}", "${cgw-az-vm}", "${cgw-az-sc}", "${cgw-az-ssh-sg}");
+CALL CgwAzUpdateOrInsert("mfvc8ks5", "20.151.22.202", "/subscriptions/18cb46c3-ea58-41c2-8cc6-71d8662f1203/resourceGroups/CGW/providers/Microsoft.Network/networkInterfaces/cgw-az-nic-mfvc8ks5", "/subscriptions/18cb46c3-ea58-41c2-8cc6-71d8662f1203/resourceGroups/CGW/providers/Microsoft.Compute/virtualMachines/cgw-az-vm-mfvc8ks5", "https://cgwazsamfvc8ks5.blob.core.windows.net/cgw-az-sc-mfvc8ks5", "/subscriptions/18cb46c3-ea58-41c2-8cc6-71d8662f1203/resourceGroups/CGW/providers/Microsoft.Network/networkSecurityGroups/cgw-az-ssh-sg-mfvc8ks5");
 
 DROP PROCEDURE IF EXISTS spCgwAzAddUserLogin;
 
@@ -79,4 +79,4 @@ DELIMITER ;
 GRANT EXECUTE ON PROCEDURE tm_cgw_db.spCgwAzAddUserLogin TO 'tm_db_user'@'localhost';  
 GRANT EXECUTE ON PROCEDURE tm_cgw_db.spCgwAzAddUserLogin TO 'tm_db_user'@'%'; 
 
-CALL spCgwAzAddUserLogin("${cgw-az-uuid}", "${cgw-az-uuid}");
+CALL spCgwAzAddUserLogin("mfvc8ks5", "mfvc8ks5");

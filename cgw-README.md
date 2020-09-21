@@ -3,12 +3,14 @@
 ### Initial Steps
 ---
 
+> 0. Screen Recording
 > 1. Change DB Instance from t2.micro to t2.medium
 > 2. Uncomment Conformity API script block
 > 3. Delete *.decrypt files within modules
 > 4. Update Web ELB IP addresses/FQDN in module local.tf files
 > 5. Update all participants list on CGW Common Resources locals section (Update 1-day before so participants can get SES emails)
 > 6. Update participants list in CGW modules per team basis (Update 1-day before so participants can get SES emails)
+> 7. Remove AWS Common SG IP restriction
 
 ### Phase 1 (Manual)
 ---

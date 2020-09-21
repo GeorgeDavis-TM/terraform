@@ -32,12 +32,12 @@ resource "local_file" "cgw-conformity-api-az-script" {
     cgw-aws-cf-stack-arn      = aws_cloudformation_stack.cgw-aws-sns.outputs["ARN"]
     cgw-az-conformity-acct-id = local.conformityAzAccountId
   })
-  filename = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
+  filename = "${path.module}/local_files/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
 }
 
 resource "null_resource" "cgw-conformity-api-az-script-run" {
   provisioner "local-exec" {
-    command     = "${path.module}/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
+    command     = "${path.module}/local_files/az-conformity-api-cmd-${random_string.unique-id.result}.sh"
     interpreter = ["/bin/bash"]
   }
   depends_on = [
@@ -47,7 +47,7 @@ resource "null_resource" "cgw-conformity-api-az-script-run" {
 
 resource "azurerm_public_ip" "cgw-az-public-ip" {
   name                = join("", ["cgw-az-public-ip-", random_string.unique-id.result])
-  resource_group_name = var.defaultAzureResourceGroupName
+  resource_group_name = data.azurerm_resource_group.cgw-az-rg.name
   location            = var.defaultAzureRegion
   allocation_method   = "Static"
 
@@ -63,7 +63,7 @@ resource "azurerm_public_ip" "cgw-az-public-ip" {
 resource "azurerm_network_interface" "cgw-az-nic" {
   name                = join("", ["cgw-az-nic-", random_string.unique-id.result])
   location            = var.defaultAzureRegion
-  resource_group_name = var.defaultAzureResourceGroupName
+  resource_group_name = data.azurerm_resource_group.cgw-az-rg.name
 
   # ip_configuration {
   #   name                          = "internal"
@@ -92,7 +92,7 @@ resource "azurerm_network_interface" "cgw-az-nic" {
 resource "azurerm_network_security_group" "cgw-az-ssh-sg" {
   name                = join("", ["cgw-az-ssh-sg-", random_string.unique-id.result])
   location            = var.defaultAzureRegion
-  resource_group_name = var.defaultAzureResourceGroupName
+  resource_group_name = data.azurerm_resource_group.cgw-az-rg.name
 
   security_rule {
     name                       = "ssh-access-rule"
@@ -122,7 +122,7 @@ resource "azurerm_network_interface_security_group_association" "cgw-az-nic-sg" 
 
 resource "azurerm_linux_virtual_machine" "cgw-az-vm" {
   name                = join("", ["cgw-az-vm-", random_string.unique-id.result])
-  resource_group_name = var.defaultAzureResourceGroupName
+  resource_group_name = data.azurerm_resource_group.cgw-az-rg.name
   location            = var.defaultAzureRegion
   size                = "Standard_D2s_v3"
 
@@ -185,7 +185,7 @@ resource "azurerm_linux_virtual_machine" "cgw-az-vm" {
 
 resource "azurerm_managed_disk" "cgw-az-vol" {
   name                 = join("", ["cgw-az-vm-", random_string.unique-id.result])
-  resource_group_name  = var.defaultAzureResourceGroupName
+  resource_group_name  = data.azurerm_resource_group.cgw-az-rg.name
   location             = var.defaultAzureRegion
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
@@ -201,7 +201,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "example" {
 
 resource "azurerm_storage_account" "cgw-az-sa" {
   name                     = join("", ["cgwazsa", random_string.unique-id.result])
-  resource_group_name      = var.defaultAzureResourceGroupName
+  resource_group_name      = data.azurerm_resource_group.cgw-az-rg.name
   location                 = var.defaultAzureRegion
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -223,7 +223,7 @@ resource "azurerm_storage_container" "cgw-az-sc" {
 
 resource "azurerm_lb" "cgw-az-lb" {
   name                = join("", ["cgw-az-lb-", random_string.unique-id.result])
-  resource_group_name = var.defaultAzureResourceGroupName
+  resource_group_name = data.azurerm_resource_group.cgw-az-rg.name
   location            = var.defaultAzureRegion
 
   tags = {
@@ -238,7 +238,7 @@ resource "azurerm_lb" "cgw-az-lb" {
 resource "azurerm_key_vault" "cgw-az-kv" {
   name                            = join("", ["cgw-az-kv-", random_string.unique-id.result])
   location                        = var.defaultAzureRegion
-  resource_group_name             = var.defaultAzureResourceGroupName
+  resource_group_name             = data.azurerm_resource_group.cgw-az-rg.name
   enabled_for_disk_encryption     = true
   enabled_for_template_deployment = true
   enabled_for_deployment          = true
@@ -253,11 +253,11 @@ resource "azurerm_key_vault" "cgw-az-kv" {
     object_id = data.azurerm_client_config.current.object_id
 
     key_permissions = [
-      "get", "list"
+      "get", "list", "create", "delete"
     ]
 
     secret_permissions = [
-      "get", "list"
+      "get", "list", "set", "delete"
     ]
 
     storage_permissions = [
@@ -279,51 +279,74 @@ resource "azurerm_key_vault" "cgw-az-kv" {
   }
 }
 
-# resource "azurerm_key_vault_key" "cgw-az-kv-key" {
-#   name         = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
-#   key_vault_id = azurerm_key_vault.cgw-az-kv.id
-#   key_type     = "RSA"
-#   key_size     = 2048
+resource "azurerm_key_vault_key" "cgw-az-kv-key" {
+  name         = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
+  key_vault_id = azurerm_key_vault.cgw-az-kv.id
+  key_type     = "RSA"
+  key_size     = 2048
 
-#   key_opts = [
-#     "decrypt",
-#     "encrypt",
-#     "sign",
-#     "unwrapKey",
-#     "verify",
-#     "wrapKey",
-#   ]
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
 
-#   tags = {
-#     Name      = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
-#     Owner     = var.tagOwner
-#     Team-UUID = join("", ["cgw-", random_string.unique-id.result])
-#     Project   = "cgw"
-#     Team      = var.teamTag
-#   }
-# }
+  tags = {
+    Name      = join("", ["cgw-az-kv-key-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
 
-# resource "azurerm_key_vault_secret" "cgw-az-kv-secret" {
-#   name         = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
-#   value        = join("", ["cgw-", random_string.unique-id.result])
-#   key_vault_id = azurerm_key_vault.cgw-az-kv.id
+resource "azurerm_key_vault_secret" "cgw-az-kv-secret" {
+  name         = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
+  value        = join("", ["cgw-", random_string.unique-id.result])
+  key_vault_id = azurerm_key_vault.cgw-az-kv.id
 
-#   tags = {
-#     Name      = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
-#     Owner     = var.tagOwner
-#     Team-UUID = join("", ["cgw-", random_string.unique-id.result])
-#     Project   = "cgw"
-#     Team      = var.teamTag
-#   }
-# }
+  tags = {
+    Name      = join("", ["cgw-az-kv-secret-", random_string.unique-id.result])
+    Owner     = var.tagOwner
+    Team-UUID = join("", ["cgw-", random_string.unique-id.result])
+    Project   = "cgw"
+    Team      = var.teamTag
+  }
+}
+
+# # # resource "azuread_user" "cgw-az-ad-user" {
+# # #   user_principal_name   = "george_davis@trendmicro.com"
+# # #   display_name          = join("", ["cgw-az-iam-user-", random_string.unique-id.result])
+# # #   mail_nickname         = join("", ["cgw-az-iam-user-", random_string.unique-id.result])
+# # #   password              = "SecretP@sswd99!"
+# # #   force_password_change = true
+# # #   account_enabled       = true
+# # #   usage_location        = "CA"
+# # # }
+
+resource "azuread_group" "cgw-az-ad-user-group" {
+  name        = join("", ["cgw-az-iam-user-group-", random_string.unique-id.result])
+  description = join("", ["cgw-az-iam-user-group-", random_string.unique-id.result])
+  owners      = data.azuread_users.cgw-az-owners.object_ids
+}
+
+resource "azurerm_role_assignment" "cgw-az-ad-user-role" {
+  scope                = data.azurerm_resource_group.cgw-az-rg.id
+  role_definition_name = "Reader"
+  principal_id         = azuread_group.cgw-az-ad-user-group.id
+}
 
 resource "local_file" "mysql-script" {
   content = templatefile("${path.module}/db-insert-az-template.tpl", {
-    cgw-az-uuid      = random_string.unique-id.result
-    cgw-az-public-ip = azurerm_public_ip.cgw-az-public-ip.ip_address
-    cgw-az-nic       = azurerm_network_interface.cgw-az-nic.id
-    cgw-az-vm        = azurerm_linux_virtual_machine.cgw-az-vm.id
-    cgw-az-sc        = azurerm_storage_container.cgw-az-sc.id
+    cgw-az-uuid          = random_string.unique-id.result
+    cgw-az-public-ip     = azurerm_public_ip.cgw-az-public-ip.ip_address
+    cgw-az-nic           = azurerm_network_interface.cgw-az-nic.id
+    cgw-az-vm            = azurerm_linux_virtual_machine.cgw-az-vm.id
+    cgw-az-sc            = azurerm_storage_container.cgw-az-sc.id
+    cgw-az-ad-user-group = azuread_group.cgw-az-ad-user-group.id
     # cgw-iam-user             = aws_iam_user.cgw-iam-user.name
     # cgw-iam-user-password    = aws_iam_user_login_profile.cgw-iam-user-login-profile.encrypted_password
     # cgw-iam-role             = aws_iam_role.cgw-iam-role.name
@@ -331,17 +354,18 @@ resource "local_file" "mysql-script" {
     # cgw-iam-policy           = aws_iam_policy.cgw-iam-policy.name
     cgw-az-ssh-sg = azurerm_network_security_group.cgw-az-ssh-sg.id
   })
-  filename = "${path.module}/mysql-script-${random_string.unique-id.result}.sql"
+  filename = "${path.module}/local_files/mysql-script-${random_string.unique-id.result}.sql"
 }
 
 resource "null_resource" "mysql-run" {
   provisioner "file" {
     content = templatefile("${path.module}/db-insert-az-template.tpl", {
-      cgw-az-uuid      = random_string.unique-id.result
-      cgw-az-public-ip = azurerm_public_ip.cgw-az-public-ip.ip_address
-      cgw-az-nic       = azurerm_network_interface.cgw-az-nic.id
-      cgw-az-vm        = azurerm_linux_virtual_machine.cgw-az-vm.id
-      cgw-az-sc        = azurerm_storage_container.cgw-az-sc.id
+      cgw-az-uuid          = random_string.unique-id.result
+      cgw-az-public-ip     = azurerm_public_ip.cgw-az-public-ip.ip_address
+      cgw-az-nic           = azurerm_network_interface.cgw-az-nic.id
+      cgw-az-vm            = azurerm_linux_virtual_machine.cgw-az-vm.id
+      cgw-az-sc            = azurerm_storage_container.cgw-az-sc.id
+      cgw-az-ad-user-group = azuread_group.cgw-az-ad-user-group.id
       # cgw-iam-user             = aws_iam_user.cgw-iam-user.name
       # cgw-iam-user-password    = aws_iam_user_login_profile.cgw-iam-user-login-profile.encrypted_password
       # cgw-iam-role             = aws_iam_role.cgw-iam-role.name

@@ -44,7 +44,7 @@ variable "tagOwner" {
 }
 
 variable "localIpCidr" {
-  default     = "142.116.0.0/15"
+  default     = ["99.251.105.233/32", "99.250.30.127/32", "99.246.229.245/32"]
   description = "Default AWS Local IP CIDR"
 }
 

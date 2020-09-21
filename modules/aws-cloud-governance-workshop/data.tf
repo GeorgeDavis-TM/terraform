@@ -40,7 +40,8 @@ data "aws_ami" "amzn-linux-2" {
 
 data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
   statement {
-    sid = join("", ["CGWS3Role", random_string.unique-id.result])
+    sid    = join("", ["CGWS3Role", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "s3:*"
     ]
@@ -54,10 +55,18 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
         join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [
+        "us-east-1"
+      ]
+    }
   }
 
   statement {
-    sid = join("", ["CGWEc2Role", random_string.unique-id.result])
+    sid    = join("", ["CGWEc2Role", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "ec2:*"
     ]
@@ -65,16 +74,83 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
       "*"
     ]
     condition {
-      test     = "StringEquals"
-      variable = "ec2:ResourceTag/Team-UUID"
+      test     = "StringEqualsIfExists"
+      variable = "aws:ResourceTag/Team-UUID"
       values = [
         join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [
+        "us-east-1"
+      ]
+    }
   }
 
+  # statement {
+  #   sid    = join("", ["CGWEc2Role2", random_string.unique-id.result])
+  #   effect = "Allow"
+  #   actions = [
+  #     "ec2:*"
+  #   ]
+  #   resources = [
+  #     "*"
+  #   ]
+  #   condition {
+  #     test     = "StringEquals"
+  #     variable = "aws:PrincipalTag/Project"
+  #     values = [
+  #       "cgw"
+  #     ]
+  #   }
+  #   condition {
+  #     test     = "StringEquals"
+  #     variable = "aws:RequestedRegion"
+  #     values = [
+  #       "us-east-1"
+  #     ]
+  #   }
+  # }
+
+  # statement {
+  #   sid    = join("", ["CGWDescribeRole", random_string.unique-id.result])
+  #   effect = "Allow"
+  #   actions = [
+  #     "ec2:DescribeInstances",
+  #     "s3:ListAllMyBuckets",
+  #     "s3:ListBucket",
+  #     "iam:ListRoles",
+  #     "iam:ListPolicies",
+  #     "iam:ListUsers",
+  #     "sns:ListTopics",
+  #     "sns:ListSubscriptions",
+  #     "sns:ListPlatformApplications",
+  #     "lambda:ListFunctions"
+  #   ]
+  #   resources = [
+  #     "*"
+  #   ]
+  #   condition {
+  #     test     = "StringEquals"
+  #     variable = "aws:PrincipalTag/Project"
+  #     values = [
+  #       "cgw"
+  #     ]
+  #   }
+  #   condition {
+  #     test     = "StringEquals"
+  #     variable = "aws:RequestedRegion"
+  #     values = [
+  #       "us-east-1"
+  #     ]
+  #   }
+  # }
+
   statement {
-    sid = join("", ["CGWKmsRole", random_string.unique-id.result])
+    sid    = join("", ["CGWKmsRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "kms:*"
     ]
@@ -88,10 +164,18 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
         join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [
+        "us-east-1"
+      ]
+    }
   }
 
   statement {
-    sid = join("", ["CGWIamRole", random_string.unique-id.result])
+    sid    = join("", ["CGWIamRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "iam:*"
     ]
@@ -105,10 +189,18 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
         join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [
+        "us-east-1"
+      ]
+    }
   }
 
   statement {
-    sid = join("", ["CGWLambdaRole", random_string.unique-id.result])
+    sid    = join("", ["CGWLambdaRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "lambda:*"
     ]
@@ -122,10 +214,18 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
         join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [
+        "us-east-1"
+      ]
+    }
   }
 
   statement {
-    sid = join("", ["CGWSnsRole", random_string.unique-id.result])
+    sid    = join("", ["CGWSnsRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "SNS:Publish"
     ]
@@ -139,12 +239,20 @@ data "aws_iam_policy_document" "cgw-aws-iam-policy-doc" {
         join("", ["cgw-aws-", random_string.unique-id.result])
       ]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values = [
+        "us-east-1"
+      ]
+    }
   }
 }
 
 data "aws_iam_policy_document" "cgw-aws-sns-policy-doc" {
   statement {
-    sid = join("", ["CGWConformityCrossAccountRole", random_string.unique-id.result])
+    sid    = join("", ["CGWConformityCrossAccountRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "SNS:Publish"
     ]
@@ -158,7 +266,8 @@ data "aws_iam_policy_document" "cgw-aws-sns-policy-doc" {
   }
 
   statement {
-    sid = join("", ["CGWSnsRole", random_string.unique-id.result])
+    sid    = join("", ["CGWSnsRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "SNS:GetTopicAttributes",
       "SNS:SetTopicAttributes",
@@ -182,7 +291,8 @@ data "aws_iam_policy_document" "cgw-aws-sns-policy-doc" {
 
 data "aws_iam_policy_document" "cgw-aws-lambda-sns-policy-doc" {
   statement {
-    sid = join("", ["CGWLambdaSnsServiceRole", random_string.unique-id.result])
+    sid    = join("", ["CGWLambdaSnsServiceRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "SNS:GetTopicAttributes",
       "SNS:SetTopicAttributes",
@@ -200,7 +310,8 @@ data "aws_iam_policy_document" "cgw-aws-lambda-sns-policy-doc" {
   }
 
   statement {
-    sid = join("", ["CGWLambdaBasicExecutionRole", random_string.unique-id.result])
+    sid    = join("", ["CGWLambdaBasicExecutionRole", random_string.unique-id.result])
+    effect = "Allow"
     actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",

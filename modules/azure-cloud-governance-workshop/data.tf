@@ -37,3 +37,14 @@ data "aws_iam_policy_document" "cgw-aws-sns-policy-doc" {
     }
   }
 }
+
+data "azurerm_resource_group" "cgw-az-rg" {
+  name = "CGW"
+}
+
+data "azuread_users" "cgw-az-owners" {
+  user_principal_names = [
+    "george_davis@trendmicro.com",
+    "yama_saadat@trendmicro.com"
+  ]
+}

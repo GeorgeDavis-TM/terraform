@@ -12,12 +12,12 @@ variable "defaultAzureRegion" {
 }
 
 variable "defaultAzureResourceGroupName" {
-  default     = "cloudone"
+  default     = "CGW"
   description = "Default Azure Resource Group Name"
 }
 
 variable "defaultAzureVirtualNetwork" {
-  default     = "cloudone-vnet"
+  default     = "CGW-vnet"
   description = "Default Azure Virtual Network Name"
 }
 
