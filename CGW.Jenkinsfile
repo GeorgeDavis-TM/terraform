@@ -17,5 +17,12 @@ pipeline {
                 '''
             }            
         }
+        stage('Terraform Plan') {
+            steps {
+                sh '''                
+                    tfp
+                '''
+            }            
+        }
     }
 }
