@@ -5,6 +5,7 @@
 # interesting to see diffs between terraform states, audits and self-learning
 # *.tfstate
 # *.tfstate.*
+*.tfstate.log
 
 # Crash log files
 crash.log
